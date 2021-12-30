@@ -1,4 +1,4 @@
 SHELL=/bin/bash
 BASH_ENV=/app/environment
 0 0 * * * arkmanager update --warn --update-mods >> ${ARK_SERVER_VOLUME}/log/crontab.log 2>&1
-0 3 * * * arkmanager backup >> ${ARK_SERVER_VOLUME}/log/crontab.log 2>&1
+0 */3 * * * arkmanager backup >> ${ARK_SERVER_VOLUME}/log/crontab.log 2>&1
