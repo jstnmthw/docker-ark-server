@@ -27,11 +27,16 @@ ENV         LANG="en_US.UTF-8" \
             STEAM_GROUP="steam" \
             STEAM_UID="1000" \
             STEAM_GID="1000" \
-            STEAM_HOME="/home/steam"
+            STEAM_HOME="/home/steam" \
+            AWS_ACCESS_KEY_ID="" \
+            AWS_SECRET_ACCESS_KEY="" \
+            AWS_DEFAULT_REGION="" \
+            AWS_BUCKET_URL="" \
+            RESTORE_ON_FIRST_LAUNCH=""
 
 RUN         set -x && \
             apt-get -qq update && apt-get -qq upgrade && \
-            apt-get -qq install curl lib32gcc1 lsof perl-modules libc6-i386 bzip2 bash-completion locales sudo cron && \
+            apt-get -qq install curl lib32gcc1 lsof perl-modules libc6-i386 bzip2 bash-completion locales sudo cron unzip && \
             sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && locale-gen && \
             addgroup --gid ${STEAM_GID} ${STEAM_USER} && \
             adduser --home ${STEAM_HOME} --uid ${STEAM_UID} --gid ${STEAM_GID} --disabled-login --shell /bin/bash --gecos "" ${STEAM_USER} && \
@@ -42,13 +47,16 @@ RUN         set -x && \
                 | tar -xvzf - -C /tmp/ && \
             bash -c "cd /tmp/ark-server-tools-${ARK_TOOLS_VERSION}/tools && bash install.sh ${STEAM_USER}" && \
             ln -s /usr/local/bin/arkmanager /usr/bin/arkmanager && \
-            curl -L http://media.steampowered.com/installer/steamcmd_linux.tar.gz \
+            curl -L https://media.steampowered.com/installer/steamcmd_linux.tar.gz \
                 | tar -xvzf - -C ${STEAM_HOME}/steamcmd/ && \
             bash -x ${STEAM_HOME}/steamcmd/steamcmd.sh +login anonymous +quit && \
             chown -R ${STEAM_USER}:${STEAM_GROUP} ${STEAM_HOME} ${ARK_SERVER_VOLUME} && \
             chmod 755 /root/ && \
             apt-get -qq autoclean && apt-get -qq autoremove && apt-get -qq clean && \
-            rm -rf /tmp/* /var/cache/apt/*
+            rm -rf /tmp/* /var/cache/apt/* && \
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
+            unzip awscliv2.zip && \
+            sudo ./aws/install
 
 COPY        conf.d/arkmanager-user.cfg  /etc/arkmanager/instances/main.cfg
 COPY        bin/    /

@@ -63,23 +63,21 @@ echo "_______________________________________"
 
 ARKMANAGER="$(command -v arkmanager)"
 [[ -x "${ARKMANAGER}" ]] || (
-  echo "Arkamanger is missing"
+  echo "Ark manger is missing"
   exit 1
 )
 
 cd "${ARK_SERVER_VOLUME}"
 
 echo "Setting up folder and file structure..."
-create_missing_dir "${ARK_SERVER_VOLUME}/log" "${ARK_SERVER_VOLUME}/backup" "${ARK_SERVER_VOLUME}/staging" "${ARK_SERVER_VOLUME}/template"
-copy_missing_file "${STEAM_HOME}/arkmanager.cfg" "${ARK_SERVER_VOLUME}/template/arkmanager.cfg"
-copy_missing_file "${STEAM_HOME}/crontab" "${ARK_SERVER_VOLUME}/template/crontab"
-copy_missing_file "${ARK_SERVER_VOLUME}/template/arkmanager.cfg" "${ARK_SERVER_VOLUME}/arkmanager.cfg"
-copy_missing_file "${ARK_SERVER_VOLUME}/template/crontab" "${ARK_SERVER_VOLUME}/crontab"
+create_missing_dir "${ARK_SERVER_VOLUME}/log" "${ARK_SERVER_VOLUME}/backup" "${ARK_SERVER_VOLUME}/staging" "${ARK_SERVER_VOLUME}/restore"
+copy_missing_file "${STEAM_HOME}/crontab" "${ARK_SERVER_VOLUME}/crontab"
+copy_missing_file "/s3-backup.sh" "${ARK_SERVER_VOLUME}/s3-backup.sh"
 
-[[ -L "${ARK_SERVER_VOLUME}/Game.ini" ]] ||
-  ln -s "${ARK_SERVER_VOLUME}"/server/ShooterGame/Saved/Config/LinuxServer/Game.ini Game.ini
-[[ -L "${ARK_SERVER_VOLUME}/GameUserSettings.ini" ]] ||
-  ln -s "${ARK_SERVER_VOLUME}"/server/ShooterGame/Saved/Config/LinuxServer/GameUserSettings.ini GameUserSettings.ini
+## Need to set correct permissions on the newly created folders? (Tested with Ubuntu)
+echo "Setting permissions..."
+sudo chown -R "${STEAM_USER}":"${STEAM_GROUP}" "${ARK_SERVER_VOLUME}"
+sudo chmod +x "${ARK_SERVER_VOLUME}/s3-backup.sh"
 
 if [[ ! -d ${ARK_SERVER_VOLUME}/server ]] || [[ ! -f ${ARK_SERVER_VOLUME}/server/version.txt ]]; then
   echo "No game files found. Installing..."
@@ -89,6 +87,15 @@ if [[ ! -d ${ARK_SERVER_VOLUME}/server ]] || [[ ! -f ${ARK_SERVER_VOLUME}/server
     "${ARK_SERVER_VOLUME}/server/ShooterGame/Binaries/Linux"
   touch "${ARK_SERVER_VOLUME}/server/ShooterGame/Binaries/Linux/ShooterGameServer"
   ${ARKMANAGER} install
+  if [[ "${RESTORE_ON_FIRST_LAUNCH}" == "true" ]]; then
+    echo "First time launch, attempting to restore from s3..."
+    aws s3 cp "${AWS_BUCKET_URL}/main.tar.bz2" "${ARK_SERVER_VOLUME}/restore/"
+    if [[ -f "${ARK_SERVER_VOLUME}/restore/main.tar.bz2" ]]; then
+      ${ARKMANAGER} restore "${ARK_SERVER_VOLUME}/restore/main.tar.bz2"
+    else
+      echo "No restore file found."
+    fi
+  fi
 else
   may_update
 fi
@@ -96,6 +103,8 @@ fi
 ACTIVE_CRONS="$(grep -v "^#" "${ARK_SERVER_VOLUME}/crontab" 2>/dev/null | wc -l)"
 if [[ ${ACTIVE_CRONS} -gt 0 ]]; then
   echo "Loading crontab..."
+  touch "${ARK_SERVER_VOLUME}/environment"
+  declare -p | grep -E 'SERVER_MAP|STEAM_HOME|STEAM_USER|ARK_SERVER_VOLUME|GAME_CLIENT_PORT|SERVER_LIST_PORT|RCON_PORT|UPDATE_ON_START|PRE_UPDATE_BACKUP|AWS_ACCESS_KEY_ID|AWS_SECRET_ACCESS_KEY|AWS_DEFAULT_REGION|AWS_BUCKET_URL' > "${ARK_SERVER_VOLUME}/environment"
   crontab "${ARK_SERVER_VOLUME}/crontab"
   sudo cron -f &
   echo "...done"
