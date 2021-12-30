@@ -24,7 +24,7 @@ function create_missing_dir() {
   for DIRECTORY in ${@}; do
     [[ -n "${DIRECTORY}" ]] || return
     if [[ ! -d "${DIRECTORY}" ]]; then
-      mkdir -p "${DIRECTORY}"
+      sudo mkdir -p "${DIRECTORY}"
       echo "...successfully created ${DIRECTORY}"
     fi
   done
@@ -35,7 +35,7 @@ function copy_missing_file() {
   DESTINATION="${2}"
 
   if [[ ! -f "${DESTINATION}" ]]; then
-    cp -a "${SOURCE}" "${DESTINATION}"
+    sudo cp -a "${SOURCE}" "${DESTINATION}"
     echo "...successfully copied ${SOURCE} to ${DESTINATION}"
   fi
 }
@@ -85,7 +85,7 @@ if [[ ! -d ${ARK_SERVER_VOLUME}/server ]] || [[ ! -f ${ARK_SERVER_VOLUME}/server
     "${ARK_SERVER_VOLUME}/server/ShooterGame/Saved/SavedArks" \
     "${ARK_SERVER_VOLUME}/server/ShooterGame/Content/Mods" \
     "${ARK_SERVER_VOLUME}/server/ShooterGame/Binaries/Linux"
-  touch "${ARK_SERVER_VOLUME}/server/ShooterGame/Binaries/Linux/ShooterGameServer"
+  sudo touch "${ARK_SERVER_VOLUME}/server/ShooterGame/Binaries/Linux/ShooterGameServer"
   ${ARKMANAGER} install
   if [[ "${RESTORE_ON_FIRST_LAUNCH}" == "true" ]]; then
     echo "First time launch, attempting to restore from s3..."
@@ -103,7 +103,7 @@ fi
 ACTIVE_CRONS="$(grep -v "^#" "${ARK_SERVER_VOLUME}/crontab" 2>/dev/null | wc -l)"
 if [[ ${ACTIVE_CRONS} -gt 0 ]]; then
   echo "Loading crontab..."
-  touch "${ARK_SERVER_VOLUME}/environment"
+  sudo touch "${ARK_SERVER_VOLUME}/environment"
   declare -p | grep -E 'SERVER_MAP|STEAM_HOME|STEAM_USER|ARK_SERVER_VOLUME|GAME_CLIENT_PORT|SERVER_LIST_PORT|RCON_PORT|UPDATE_ON_START|PRE_UPDATE_BACKUP|AWS_ACCESS_KEY_ID|AWS_SECRET_ACCESS_KEY|AWS_DEFAULT_REGION|AWS_BUCKET_URL' > "${ARK_SERVER_VOLUME}/environment"
   crontab "${ARK_SERVER_VOLUME}/crontab"
   sudo cron -f &
