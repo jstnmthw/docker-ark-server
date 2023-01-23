@@ -86,6 +86,7 @@ if [[ ! -d ${ARK_SERVER_VOLUME}/server ]] || [[ ! -f ${ARK_SERVER_VOLUME}/server
     "${ARK_SERVER_VOLUME}/server/ShooterGame/Content/Mods" \
     "${ARK_SERVER_VOLUME}/server/ShooterGame/Binaries/Linux"
   sudo touch "${ARK_SERVER_VOLUME}/server/ShooterGame/Binaries/Linux/ShooterGameServer"
+  sudo chown -R "${STEAM_USER}":"${STEAM_GROUP}" "${ARK_SERVER_VOLUME}/server"
   ${ARKMANAGER} install
   if [[ "${RESTORE_ON_FIRST_LAUNCH}" == "true" ]]; then
     echo "First time launch, attempting to restore from s3..."

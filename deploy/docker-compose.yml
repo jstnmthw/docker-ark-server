@@ -4,7 +4,7 @@ services:
   server:
     restart: always
     container_name: server
-    image: jstnmthw/ark-server:latest
+    build: ../
     volumes:
       - ${HOME}/.ark:/app
     environment:
