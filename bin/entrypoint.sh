@@ -105,6 +105,7 @@ ACTIVE_CRONS="$(grep -v "^#" "${ARK_SERVER_VOLUME}/crontab" 2>/dev/null | wc -l)
 if [[ ${ACTIVE_CRONS} -gt 0 ]]; then
   echo "Loading crontab..."
   sudo touch "${ARK_SERVER_VOLUME}/environment"
+  sudo chown -R "${STEAM_USER}":"${STEAM_GROUP}" "${ARK_SERVER_VOLUME}/environment"
   declare -p | grep -E 'SERVER_MAP|STEAM_HOME|STEAM_USER|ARK_SERVER_VOLUME|GAME_CLIENT_PORT|SERVER_LIST_PORT|RCON_PORT|UPDATE_ON_START|PRE_UPDATE_BACKUP|AWS_ACCESS_KEY_ID|AWS_SECRET_ACCESS_KEY|AWS_DEFAULT_REGION|AWS_BUCKET_URL' > "${ARK_SERVER_VOLUME}/environment"
   crontab "${ARK_SERVER_VOLUME}/crontab"
   sudo cron -f &
