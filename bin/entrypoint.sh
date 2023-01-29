@@ -83,6 +83,7 @@ if [[ ! -d ${ARK_SERVER_VOLUME}/server ]] || [[ ! -f ${ARK_SERVER_VOLUME}/server
   echo "No game files found. Installing..."
   create_missing_dir \
     "${ARK_SERVER_VOLUME}/server/ShooterGame/Saved/SavedArks" \
+    "${ARK_SERVER_VOLUME}/server/ShooterGame/Saved/Config/LinuxServer" \
     "${ARK_SERVER_VOLUME}/server/ShooterGame/Content/Mods" \
     "${ARK_SERVER_VOLUME}/server/ShooterGame/Binaries/Linux"
   sudo touch "${ARK_SERVER_VOLUME}/server/ShooterGame/Binaries/Linux/ShooterGameServer"
